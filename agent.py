@@ -1,10 +1,11 @@
 from dotenv import load_dotenv
+from livekit.plugins import elevenlabs
+
 
 from livekit import agents
 from livekit.agents import AgentSession, Agent, RoomInputOptions
 from livekit.plugins import (
     
-    cartesia,
     deepgram,
     noise_cancellation,
     silero,
@@ -25,7 +26,11 @@ async def entrypoint(ctx: agents.JobContext):
     session = AgentSession(
         stt=deepgram.STT(model="nova-3", language="multi"),
         llm=google.beta.realtime.RealtimeModel(),
-        tts=cartesia.TTS(model="sonic-2", voice="f786b574-daa5-4673-aa0c-cbe3e8534c02"),
+        tts=elevenlabs.TTS(
+        model="eleven_multilingual_v2",
+        voice_id="MaLeGj8yeAGK8yQXRAzr",
+          
+        ),
         vad=silero.VAD.load(),
         turn_detection=MultilingualModel(),
     )
@@ -34,7 +39,7 @@ async def entrypoint(ctx: agents.JobContext):
         room=ctx.room,
         agent=Assistant(),
         room_input_options=RoomInputOptions(
-            # For telephony applications, use `BVCTelephony` instead for best results
+           
             noise_cancellation=noise_cancellation.BVC(), 
         ),
     )
@@ -46,3 +51,6 @@ async def entrypoint(ctx: agents.JobContext):
 
 if __name__ == "__main__":
     agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
+
+
+
