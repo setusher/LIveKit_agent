@@ -5,14 +5,14 @@ from datetime import datetime
 
 EXCEL_FILE = "hotel_db.xlsx"
 
-# Configure logging (console + debug level)
+
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
-# --- 1. Check available rooms ---
+
 @function_tool()
 async def find_available_rooms(
-    context: RunContext,  # type: ignore
+    context: RunContext,  
     room_type: str,
     checkin_date: str,
     checkout_date: str,
@@ -61,10 +61,10 @@ async def find_available_rooms(
         return f"Error: {str(e)}"
 
 
-# --- 2. Book a room ---
+
 @function_tool()
 async def book_room(
-    context: RunContext,  # type: ignore
+    context: RunContext, 
     room_id: str,
     guest_name: str,
     room_type: str,
@@ -109,61 +109,3 @@ async def book_room(
         return f"Error: {str(e)}"
 
 
-# --- 3. Cancel booking ---
-@function_tool()
-async def cancel_booking(
-    context: RunContext,  # type: ignore
-    guest_name: str,
-    room_id: str,
-    excel_file: str = EXCEL_FILE
-) -> str:
-    logging.debug("❌ cancel_booking CALLED")
-    logging.debug(f"Inputs => guest_name={guest_name}, room_id={room_id}")
-    try:
-        df_bookings = pd.read_excel(excel_file, sheet_name="Bookings_Reservations")
-
-        mask = (df_bookings["Guest_Name"] == guest_name) & (df_bookings["Room_ID"] == room_id)
-        if mask.any():
-            df_bookings = df_bookings[~mask]
-            df_bookings.to_excel(excel_file, sheet_name="Bookings_Reservations", index=False)
-            result = f"Booking for {guest_name} in room {room_id} has been cancelled."
-        else:
-            result = f"No booking found for {guest_name} in room {room_id}."
-
-        logging.info(result)
-        return result
-    except Exception as e:
-        logging.error(f"Error cancelling booking: {e}")
-        return f"Error: {str(e)}"
-
-
-# --- 4. Check guest’s bookings ---
-@function_tool()
-async def get_guest_bookings(
-    context: RunContext,  # type: ignore
-    guest_name: str,
-    excel_file: str = EXCEL_FILE
-) -> str:
-    logging.debug("👤 get_guest_bookings CALLED")
-    logging.debug(f"Inputs => guest_name={guest_name}")
-    try:
-        df_bookings = pd.read_excel(excel_file, sheet_name="Bookings_Reservations")
-        guest_bookings = df_bookings[df_bookings["Guest_Name"].str.lower() == guest_name.lower()]
-
-        if guest_bookings.empty:
-            result = f"No bookings found for {guest_name}."
-            logging.info(result)
-            return result
-
-        details = []
-        for _, b in guest_bookings.iterrows():
-            details.append(
-                f"Room {b['Room_ID']} ({b['Room_Type']}) from {b['Check_In_Date'].date()} to {b['Check_Out_Date'].date()} for {b['Guests']} guests"
-            )
-
-        result = f"Bookings for {guest_name}: " + "; ".join(details)
-        logging.info(result)
-        return result
-    except Exception as e:
-        logging.error(f"Error fetching bookings: {e}")
-        return f"Error: {str(e)}"
